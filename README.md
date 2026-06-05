@@ -31,13 +31,14 @@ python3 -m pip install .[dev]
 ### Option 1: Run directly from repository
 
 ```bash
-python3 /tmp/workspace/Oussama-Ouaanine/quick-disk-check/quick_disk_check.py
+git clone https://github.com/Oussama-Ouaanine/quick-disk-check.git
+cd quick-disk-check
+python3 quick_disk_check.py
 ```
 
 ### Option 2: Install CLI entrypoint
 
 ```bash
-cd /tmp/workspace/Oussama-Ouaanine/quick-disk-check
 python3 -m pip install .[dev]
 quick-disk-check --test /dev/sda
 ```
@@ -47,7 +48,7 @@ quick-disk-check --test /dev/sda
 ### GUI mode
 
 ```bash
-python3 /tmp/workspace/Oussama-Ouaanine/quick-disk-check/quick_disk_check.py
+python3 quick_disk_check.py
 ```
 
 Then select a disk and run the scan.
@@ -99,23 +100,22 @@ Each scan writes to `reports/`:
 
 ## Project Structure
 
-- `/tmp/workspace/Oussama-Ouaanine/quick-disk-check/quick_disk_check.py` — backward-compatible launcher (GUI by default)
-- `/tmp/workspace/Oussama-Ouaanine/quick-disk-check/src/quick_disk_check/` — package code
+- `quick_disk_check.py` — backward-compatible launcher (GUI by default)
+- `src/quick_disk_check/` — package code
   - `smartctl_io.py` — SMART I/O + disk listing
   - `evaluator.py` — metric extraction and verdict logic
   - `reporting.py` — report formatting
   - `app.py` — scan orchestration
   - `cli.py` — CLI entrypoint
   - `gui.py` — Tkinter GUI
-- `/tmp/workspace/Oussama-Ouaanine/quick-disk-check/tests/` — test suite
-- `/tmp/workspace/Oussama-Ouaanine/quick-disk-check/.github/workflows/ci.yml` — CI workflow
+- `tests/` — test suite
+- `.github/workflows/ci.yml` — CI workflow
 
 ## Development
 
 Run tests:
 
 ```bash
-cd /tmp/workspace/Oussama-Ouaanine/quick-disk-check
 python3 -m pip install .[dev]
 python3 -m pytest
 ```
