@@ -1,99 +1,126 @@
 # Quick Disk Check
 
-`quick-disk-check` is a fast Linux disk screening tool powered by SMART (`smartctl -x -j`).
-It provides both a GUI flow for quick checks and a CLI flow for automation and logging.
+[![CI](https://github.com/Oussama-Ouaanine/quick-disk-check/actions/workflows/ci.yml/badge.svg)](https://github.com/Oussama-Ouaanine/quick-disk-check/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 
-## Why this project is useful
+Fast Linux disk screening with SMART data (`smartctl -x -j`) for quick used-drive decisions.
 
-- Uses structured SMART JSON (no fragile text parsing)
-- Applies clear buy/no-buy rules for core failure indicators
-- Produces human report + raw JSON for auditability
-- Includes unit tests and CI for reliability
+## Highlights
 
-## Decision rules
+- Structured SMART JSON parsing (no brittle text scraping)
+- Clear verdict engine (`GOOD`, `GOOD (USED)`, `CAUTION`, `DO NOT BUY`, `INCONCLUSIVE`)
+- GUI mode for quick checks and CLI mode for automation
+- Saves both human-readable `.txt` and raw `.json` reports
+- Covered by unit tests and CI
 
-Hard-failure indicators (must be zero for a healthy used drive):
+## Requirements
+
+- Linux
+- Python **3.10+**
+- `smartmontools` (`smartctl`)
+- `pkexec` (GUI privilege elevation)
+
+Install dependencies:
+
+```bash
+python3 -m pip install .[dev]
+```
+
+## Installation
+
+### Option 1: Run directly from repository
+
+```bash
+git clone https://github.com/Oussama-Ouaanine/quick-disk-check.git
+cd quick-disk-check
+python3 quick_disk_check.py
+```
+
+### Option 2: Install CLI entrypoint
+
+```bash
+python3 -m pip install .[dev]
+quick-disk-check --test /dev/sda
+```
+
+## Usage
+
+### GUI mode
+
+```bash
+python3 quick_disk_check.py
+```
+
+Then select a disk and run the scan.
+
+### CLI mode
+
+```bash
+quick-disk-check --test /dev/sda
+```
+
+Optional output directory:
+
+```bash
+quick-disk-check --test /dev/sda --reports-dir /path/to/reports
+```
+
+> For complete SMART attributes, run CLI with elevated privileges when needed (for example `sudo`).
+
+## Decision Rules
+
+A disk is considered unsafe if any hard-failure indicator is non-zero or SMART overall health reports failure.
+
+Hard-failure indicators:
 
 - `Reallocated_Sector_Ct`
 - `Current_Pending_Sector`
 - `Offline_Uncorrectable`
 
-SMART overall health must not be `FAILED`.
+Power-on-hours guidance:
 
-Power-on hours are wear guidance, not universal pass/fail:
-
-- `< 10000`: low wear
-- `10000-30000`: moderate wear
-- `> 30000`: high wear (`CAUTION`)
+- `< 10000` → low wear
+- `10000-30000` → moderate wear
+- `> 30000` → high wear (`CAUTION`)
 
 ## Verdicts
 
-- `DO NOT BUY`: hard-failure indicator non-zero or SMART health failed
-- `CAUTION`: hard indicators clean, but very high hours
-- `GOOD (USED)`: hard indicators clean with moderate hours
-- `GOOD`: hard indicators clean with low hours
-- `INCONCLUSIVE`: SMART data incomplete (usually permissions), rerun with sudo/pkexec
+- **DO NOT BUY**: hard-failure indicators present or SMART health failed
+- **CAUTION**: hard indicators are clean, but wear is high
+- **GOOD (USED)**: hard indicators are clean with moderate wear
+- **GOOD**: hard indicators are clean with low wear
+- **INCONCLUSIVE**: SMART data incomplete (usually permissions)
 
-## Project layout
+## Output
 
-- `quick_disk_check.py`: backward-compatible launcher (GUI by default)
-- `src/quick_disk_check/`: package code
-	- `smartctl_io.py`: disk listing + SMART JSON I/O
-	- `evaluator.py`: metrics extraction + verdict engine
-	- `reporting.py`: text report builder
-	- `app.py`: orchestration pipeline
-	- `cli.py`: CLI entrypoint
-	- `gui.py`: Tkinter GUI
-- `tests/`: pytest suite
-- `.github/workflows/ci.yml`: CI test workflow
-
-## Requirements
-
-- Linux
-- Python `>=3.10`
-- `smartmontools` (`smartctl`)
-- GUI mode uses `pkexec` for privilege elevation
-
-## Quick start
-
-Run GUI:
-
-```bash
-python3 /home/ergo/Desktop/project/quick_disk_check.py
-```
-
-Run CLI scan:
-
-```bash
-sudo python3 /home/ergo/Desktop/project/quick_disk_check.py --test /dev/sda
-```
-
-Using `sudo` is recommended for CLI scans so SMART attributes are complete.
-
-Or install as a package and run command:
-
-```bash
-cd /home/ergo/Desktop/project
-python3 -m pip install .[dev]
-quick-disk-check --test /dev/sda
-```
-
-## Output artifacts
-
-Each scan writes into `reports/`:
+Each scan writes to `reports/`:
 
 - `disk_report_<disk>_<timestamp>.txt`
 - `disk_report_<disk>_<timestamp>.json`
 
-## Local tests
+## Project Structure
+
+- `quick_disk_check.py` — backward-compatible launcher (GUI by default)
+- `src/quick_disk_check/` — package code
+  - `smartctl_io.py` — SMART I/O + disk listing
+  - `evaluator.py` — metric extraction and verdict logic
+  - `reporting.py` — report formatting
+  - `app.py` — scan orchestration
+  - `cli.py` — CLI entrypoint
+  - `gui.py` — Tkinter GUI
+- `tests/` — test suite
+- `.github/workflows/ci.yml` — CI workflow
+
+## Development
+
+Run tests:
 
 ```bash
-cd /home/ergo/Desktop/project
 python3 -m pip install .[dev]
 python3 -m pytest
 ```
 
 ## Notes
 
-- Software cannot detect mechanical noise; a physical listening test is still recommended.
-- ATA error log history is surfaced in notes for deeper investigation.
+- Software checks SMART telemetry; it cannot detect mechanical noise.
+- Review ATA error-history notes in reports for deeper diagnostics.
